@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from planner.rules import apply_rules
 from planner.scheduler import generate_schedule
+from planner.progress import record_progress
+
 
 
 
@@ -27,4 +29,20 @@ def create_plan():
     "constraints": rules,
     "plan": plan
 })
+
+@app.route("/progress", methods=["POST"])
+def update_progress():
+    data = request.get_json()
+
+    day = data.get("day")
+    completed_tasks = data.get("completed_tasks", [])
+    skipped_tasks = data.get("skipped_tasks", [])
+
+    entry = record_progress(day, completed_tasks, skipped_tasks)
+
+    return jsonify({
+        "message": "Progress recorded",
+        "entry": entry
+    })
+
 
