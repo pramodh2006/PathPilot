@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from planner.rules import apply_rules
 from planner.scheduler import generate_schedule
 from planner.progress import record_progress
+from planner.progress import get_skipped_tasks
+
 
 
 
@@ -21,8 +23,9 @@ def create_plan():
     exam_mode = data.get("exam_mode")
     rules = apply_rules(hours, exam_mode)
 
+    skipped_tasks = get_skipped_tasks()
+    plan = generate_schedule(goal, rules, skipped_tasks)
 
-    plan = generate_schedule(goal, rules)
 
     return jsonify({
     "goal": goal,

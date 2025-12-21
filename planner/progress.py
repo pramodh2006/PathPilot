@@ -32,3 +32,12 @@ def record_progress(day, completed_tasks, skipped_tasks):
     save_progress(data)
 
     return entry
+
+def get_skipped_tasks():
+    data = load_progress()
+
+    skipped = []
+    for entry in data["history"]:
+        skipped.extend(entry.get("skipped_tasks", []))
+
+    return skipped

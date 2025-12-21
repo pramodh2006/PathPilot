@@ -1,17 +1,13 @@
 from planner.ai import generate_tasks_with_ai
 
-def generate_schedule(goal, constraints):
-    max_tasks = constraints["max_tasks"]
-    intensity = constraints["intensity"]
+def generate_schedule(goal, rules, skipped_tasks=None):
+    plan = {}
 
-    ai_tasks = generate_tasks_with_ai(goal, intensity)
+    plan["Day 1"] = ["Arrays", "2 problems"]
+    plan["Day 2"] = ["Linked List", "2 problems"]
 
-    plan = []
-
-    for day in range(1, 8):
-        plan.append({
-            "day": day,
-            "tasks": ai_tasks[:max_tasks]
-        })
+    if skipped_tasks:
+        plan["Day 2"].extend(skipped_tasks)
 
     return plan
+
