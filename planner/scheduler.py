@@ -1,26 +1,17 @@
+from planner.ai import generate_tasks_with_ai
+
 def generate_schedule(goal, constraints):
-    """
-    Generates a 7-day schedule based on constraints.
-    """
-
     max_tasks = constraints["max_tasks"]
+    intensity = constraints["intensity"]
 
-    base_tasks = [
-        "Revise fundamentals",
-        "Practice DSA problems",
-        "Read core concepts",
-        "Implement small coding task",
-        "Review mistakes"
-    ]
+    ai_tasks = generate_tasks_with_ai(goal, intensity)
 
     plan = []
 
     for day in range(1, 8):
-        day_tasks = base_tasks[:max_tasks]
-
         plan.append({
             "day": day,
-            "tasks": day_tasks
+            "tasks": ai_tasks[:max_tasks]
         })
 
     return plan
