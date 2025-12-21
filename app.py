@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify
+from planner.rules import apply_rules
+
 
 app = Flask(__name__)
 
@@ -13,6 +15,8 @@ def create_plan():
     goal = data.get("goal")
     hours = data.get("hours_per_day")
     exam_mode = data.get("exam_mode")
+    rules = apply_rules(hours, exam_mode)
+
 
     mock_plan = [
         {"day": 1, "task": "Revise programming fundamentals"},
@@ -25,8 +29,7 @@ def create_plan():
     ]
 
     return jsonify({
-        "goal": goal,
-        "hours_per_day": hours,
-        "exam_mode": exam_mode,
-        "plan": mock_plan
-    })
+    "goal": goal,
+    "constraints": rules,
+    "plan": mock_plan
+})
