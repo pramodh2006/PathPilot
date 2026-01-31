@@ -2,11 +2,6 @@ from flask import Flask, request, jsonify
 from planner.rules import apply_rules
 from planner.scheduler import generate_schedule
 from planner.progress import record_progress
-from planner.progress import get_skipped_tasks
-
-
-
-
 
 app = Flask(__name__)
 
@@ -16,22 +11,21 @@ def health_check():
 
 @app.route("/plan", methods=["POST"])
 def create_plan():
-    data = request.get_json()
+    data = request.get_json(force=True)
 
     goal = data.get("goal")
     hours = data.get("hours_per_day")
     exam_mode = data.get("exam_mode")
+
     rules = apply_rules(hours, exam_mode)
 
-    skipped_tasks = get_skipped_tasks()
-    plan = generate_schedule(goal, rules, skipped_tasks)
-
+    plan = generate_schedule(goal, rules)
 
     return jsonify({
-    "goal": goal,
-    "constraints": rules,
-    "plan": plan
-})
+        "goal": goal,
+        "constraints": rules,
+        "plan": plan
+    })
 
 @app.route("/progress", methods=["POST"])
 def update_progress():
@@ -47,5 +41,3 @@ def update_progress():
         "message": "Progress recorded",
         "entry": entry
     })
-
-

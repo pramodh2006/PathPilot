@@ -1,0 +1,18 @@
+{
+  "Arrays": {
+    "status": "skipped",
+    "skipped_count": 2
+  },
+  "Linked List": {
+    "status": "pending",
+    "skipped_count": 0
+  },
+  "Stacks": {
+    "status": "pending",
+    "skipped_count": 0
+  },
+  "Queues": {
+    "status": "pending",
+    "skipped_count": 0
+  }
+}

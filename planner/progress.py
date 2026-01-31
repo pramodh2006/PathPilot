@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+from planner.task_state import load_task_state, save_task_state
 
 PROGRESS_FILE = "data/progress.json"
 
@@ -13,13 +14,21 @@ def load_progress():
 
 def save_progress(data):
     os.makedirs("data", exist_ok=True)
-
     with open(PROGRESS_FILE, "w") as f:
         json.dump(data, f, indent=2)
 
-
 def record_progress(day, completed_tasks, skipped_tasks):
-    data = load_progress()
+    progress = load_progress()
+    task_state = load_task_state()
+
+    for task in skipped_tasks:
+        if task_state.get(task, {}).get("status") != "completed":  
+            current = task_state.get(task, {"status": "pending", "skipped_count": 0})
+            current["status"] = "skipped"   
+            current["skipped_count"] = current.get("skipped_count", 0) + 1  
+            task_state[task] = current      
+
+
 
     entry = {
         "day": day,
@@ -28,16 +37,9 @@ def record_progress(day, completed_tasks, skipped_tasks):
         "timestamp": datetime.utcnow().isoformat()
     }
 
-    data["history"].append(entry)
-    save_progress(data)
+    progress["history"].append(entry)
+
+    save_progress(progress)
+    save_task_state(task_state)
 
     return entry
-
-def get_skipped_tasks():
-    data = load_progress()
-
-    skipped = []
-    for entry in data["history"]:
-        skipped.extend(entry.get("skipped_tasks", []))
-
-    return skipped
