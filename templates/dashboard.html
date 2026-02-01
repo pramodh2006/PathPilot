@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head><title>PathPilot Labs</title><style>body{font-family:sans-serif;}</style></head>
+<body>
+<h1>🚀 PathPilot Labs - Career Roadmaps</h1>
+<button onclick="createRoadmap()">+ New Roadmap</button>
+<div id="roadmaps"></div>
+<script>
+async function loadRoadmaps() {
+  const res = await fetch('/roadmaps');
+  const data = await res.json();
+  document.getElementById('roadmaps').innerHTML = data.map(r =>
+    `<div style="border:1px solid #ccc;padding:1em;margin:1em;">
+      <h3>${r.name} (${r.progress_pct?.toFixed(0)}%)</h3>
+      <pre>${JSON.stringify(r.plan, null, 2)}</pre>
+    </div>`
+  ).join('');
+}
+loadRoadmaps();
+async function createRoadmap() {
+  const name = prompt('Roadmap name?');
+  const res = await fetch('/roadmaps', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      name, goal: name.includes('AWS') ? 'DSA' : 'Basics',
+      hours_per_day: 2, exam_mode: false
+    })
+  });
+  loadRoadmaps();
+}
+</script>
+</body>
+</html>

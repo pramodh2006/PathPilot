@@ -1,13 +1,18 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from planner.rules import apply_rules
 from planner.scheduler import generate_schedule
 from planner.progress import record_progress
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route('/')
+def dashboard():
+  return render_template('dashboard.html')
+
+@app.route("/healthcheck")  # Add /healthcheck
 def health_check():
-    return jsonify({"status": "PathPilot API running"})
+    return jsonify({"status": "PathPilot API running 🚀"})
+
 
 @app.route("/plan", methods=["POST"])
 def create_plan():
@@ -41,3 +46,8 @@ def update_progress():
         "message": "Progress recorded",
         "entry": entry
     })
+
+if __name__ == '__main__':
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
