@@ -43,3 +43,5 @@ def record_progress(day, completed_tasks, skipped_tasks):
     save_task_state(task_state)
 
     return entry
+
+os.makedirs("data", exist_ok=True)
