@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PathPilot - Career Roadmap Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent-blue: #3b82f6;
+            --accent-blue-hover: #2563eb;
+            --accent-blue-light: rgba(59, 130, 246, 0.1);
+            --border-color: #2a2a2a;
+            --success-green: #10b981;
+            --warning-amber: #f59e0b;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 3rem 0 2rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-title {
+            font-size: 2rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px var(--accent-blue-light);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-blue-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 12px -2px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Results Section */
+        .results {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .results.visible {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .badge-ai {
+            background: var(--accent-blue-light);
+            color: var(--accent-blue);
+            border: 1px solid var(--accent-blue);
+        }
+
+        .badge-template {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-amber);
+            border: 1px solid var(--warning-amber);
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+
+        /* Milestones */
+        .milestones-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .milestone-pill {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .milestone-pill:hover {
+            border-color: var(--accent-blue);
+            background: var(--accent-blue-light);
+        }
+
+        .milestone-number {
+            background: var(--accent-blue);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Tasks */
+        .tasks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .task-item:hover {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .task-item.completed .task-checkbox {
+            background: var(--success-green);
+            border-color: var(--success-green);
+        }
+
+        .task-checkbox svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: white;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            display: none;
+        }
+
+        .task-item.completed .task-checkbox svg {
+            display: block;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 0.95rem;
+        }
+
+        /* Resources */
+        .resources-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .resource-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .resource-item:hover {
+            border-color: var(--accent-blue);
+            background: var(--accent-blue-light);
+            transform: translateX(4px);
+        }
+
+        .resource-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-blue-light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .resource-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--accent-blue);
+        }
+
+        .resource-text {
+            flex: 1;
+            font-size: 0.95rem;
+            word-break: break-word;
+        }
+
+        .resource-arrow {
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Error Message */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .hero {
+                padding: 2rem 1.5rem;
+            }
+
+            .hero-title {
+                font-size: 1.5rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">PathPilot</div>
+            <div class="tagline">Your AI-Powered Career Roadmap Generator</div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1 class="hero-title">Generate Your Career Roadmap</h1>
+            <p class="hero-subtitle">Enter your career goal and daily commitment to get a personalized plan</p>
+
+            <form id="roadmapForm" class="form-grid">
+                <div class="form-group">
+                    <label for="careerGoal" class="form-label">Career Goal</label>
+                    <input 
+                        type="text" 
+                        id="careerGoal" 
+                        class="form-input" 
+                        placeholder="e.g., AWS Solutions Architect, Mechanical Engineer"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="hoursPerDay" class="form-label">Hours Per Day</label>
+                    <input 
+                        type="number" 
+                        id="hoursPerDay" 
+                        class="form-input" 
+                        placeholder="e.g., 2"
+                        min="0.5"
+                        max="24"
+                        step="0.5"
+                        required
+                    >
+                </div>
+            </form>
+
+            <button type="submit" form="roadmapForm" class="btn-primary" id="generateBtn">
+                <span id="btnText">Generate Roadmap</span>
+                <div class="spinner" id="spinner" style="display: none;"></div>
+            </button>
+        </section>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message"></div>
+
+        <!-- Results Section -->
+        <section id="results" class="results">
+            <div class="results-header">
+                <h2 class="results-title">Your Personalized Roadmap</h2>
+                <div id="sourceBadge"></div>
+            </div>
+
+            <!-- Milestones Card -->
+            <div class="card">
+                <h3 class="card-title">
+                    <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    Milestones
+                </h3>
+                <div id="milestonesList" class="milestones-list"></div>
+            </div>
+
+            <!-- Daily Tasks Card -->
+            <div class="card">
+                <h3 class="card-title">
+                    <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    Daily Tasks
+                </h3>
+                <div id="tasksList" class="tasks-list"></div>
+            </div>
+
+            <!-- Resources Card -->
+            <div class="card">
+                <h3 class="card-title">
+                    <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    Resources
+                </h3>
+                <div id="resourcesList" class="resources-list"></div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // DOM Elements
+        const form = document.getElementById('roadmapForm');
+        const generateBtn = document.getElementById('generateBtn');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('spinner');
+        const errorMessage = document.getElementById('errorMessage');
+        const results = document.getElementById('results');
+        const sourceBadge = document.getElementById('sourceBadge');
+        const milestonesList = document.getElementById('milestonesList');
+        const tasksList = document.getElementById('tasksList');
+        const resourcesList = document.getElementById('resourcesList');
+
+        // Task completion state
+        let completedTasks = new Set();
+
+        // Form Submit Handler
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await generateRoadmap();
+        });
+
+        // Main Function
+        async function generateRoadmap() {
+            const careerGoal = document.getElementById('careerGoal').value.trim();
+            const hoursPerDay = parseFloat(document.getElementById('hoursPerDay').value);
+
+            if (!careerGoal || !hoursPerDay) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            // Reset state
+            hideError();
+            results.classList.remove('visible');
+            completedTasks.clear();
+
+            // Show loading state
+            setLoading(true);
+
+            try {
+                const response = await fetch('/plan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        goal: careerGoal,
+                        hours_per_day: hoursPerDay
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                renderResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to generate roadmap. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Render Results
+        function renderResults(data) {
+            const { source, plan } = data;
+
+            // Render Source Badge
+            const isAI = source === 'groq_ai' || source.toLowerCase().includes('ai');
+            sourceBadge.innerHTML = `
+                <div class="badge ${isAI ? 'badge-ai' : 'badge-template'}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        ${isAI 
+                            ? '<path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path>'
+                            : '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline>'
+                        }
+                    </svg>
+                    ${isAI ? 'AI Generated' : 'Template'}
+                </div>
+            `;
+
+            // Render Milestones
+            if (plan.milestones && plan.milestones.length > 0) {
+                milestonesList.innerHTML = plan.milestones.map((milestone, index) => `
+                    <div class="milestone-pill">
+                        <span class="milestone-number">${index + 1}</span>
+                        <span>${milestone}</span>
+                    </div>
+                `).join('');
+            } else {
+                milestonesList.innerHTML = '<div class="empty-state">No milestones available</div>';
+            }
+
+            // Render Tasks
+            if (plan.tasks && plan.tasks.length > 0) {
+                tasksList.innerHTML = plan.tasks.map((task, index) => `
+                    <div class="task-item" data-task-id="${index}">
+                        <div class="task-checkbox">
+                            <svg viewBox="0 0 24 24">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="task-text">${task}</div>
+                    </div>
+                `).join('');
+
+                // Add click handlers to tasks
+                document.querySelectorAll('.task-item').forEach(item => {
+                    item.addEventListener('click', () => toggleTask(item));
+                });
+            } else {
+                tasksList.innerHTML = '<div class="empty-state">No tasks available</div>';
+            }
+
+            // Render Resources
+            if (plan.resources && plan.resources.length > 0) {
+                resourcesList.innerHTML = plan.resources.map(resource => `
+                    <a href="${resource}" target="_blank" rel="noopener noreferrer" class="resource-item">
+                        <div class="resource-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                        </div>
+                        <div class="resource-text">${resource}</div>
+                        <span class="resource-arrow">→</span>
+                    </a>
+                `).join('');
+            } else {
+                resourcesList.innerHTML = '<div class="empty-state">No resources available</div>';
+            }
+
+            // Show results
+            results.classList.add('visible');
+            results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Toggle Task Completion
+        function toggleTask(taskElement) {
+            const taskId = taskElement.dataset.taskId;
+            
+            if (completedTasks.has(taskId)) {
+                completedTasks.delete(taskId);
+                taskElement.classList.remove('completed');
+            } else {
+                completedTasks.add(taskId);
+                taskElement.classList.add('completed');
+            }
+        }
+
+        // Loading State
+        function setLoading(isLoading) {
+            generateBtn.disabled = isLoading;
+            btnText.textContent = isLoading ? 'Generating...' : 'Generate Roadmap';
+            spinner.style.display = isLoading ? 'block' : 'none';
+        }
+
+        // Error Handling
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('visible');
+            setTimeout(() => hideError(), 5000);
+        }
+
+        function hideError() {
+            errorMessage.classList.remove('visible');
+        }
+    </script>
+</body>
+</html>
