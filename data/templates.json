@@ -1,0 +1,20 @@
+{
+  "aws_sde_intern": {
+    "milestones": ["AWS Basics", "DSA Medium", "Projects", "Interviews"],
+    "tasks": ["Launch EC2/S3", "NeetCode arrays/strings", "Deploy Flask to Railway", "Mock LP questions"],
+    "resources": ["docs.aws.amazon.com/ec2", "neetcode.io", "Railway.app"],
+    "duration_days": 90
+  },
+  "full_stack": {
+    "milestones": ["Frontend", "Backend", "Deploy"],
+    "tasks": ["React hooks", "Flask/FastAPI APIs", "Docker Railway"],
+    "resources": ["react.dev", "flask.palletsprojects.com", "railway.app"],
+    "duration_days": 60
+  },
+  "dsa": {
+    "milestones": ["Easy", "Medium", "Hard"],
+    "tasks": ["Arrays, Two Pointers", "Trees, Graphs", "DP"],
+    "resources": ["leetcode.com", "neetcode.io"],
+    "duration_days": 45
+  }
+}
