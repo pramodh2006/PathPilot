@@ -18,7 +18,7 @@ export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('landing');
   const [missionData, setMissionData] = useState<MissionData | null>(null);
   
-  // NEW: Store the plan received from Flask
+  // NEW: State to hold the plan from Flask
   const [roadmap, setRoadmap] = useState<any>(null);
 
   const handleStart = () => {
@@ -30,9 +30,10 @@ export default function App() {
     setCurrentScreen('generating');
   };
 
-  // CHANGED: Now accepts the backend data
+  // NEW: Handler receives data from GenerationExperience
   const handleGenerationComplete = (backendData: any) => {
-    setRoadmap(backendData); // Save the plan
+    console.log("App received roadmap:", backendData); // Debug log
+    setRoadmap(backendData);
     setCurrentScreen('dashboard');
   };
 
@@ -52,7 +53,7 @@ export default function App() {
       {currentScreen === 'dashboard' && (
         <MissionControl 
            missionData={missionData!} 
-           roadmap={roadmap} // PASS THE DATA DOWN
+           roadmap={roadmap} // PASS IT DOWN
         />
       )}
     </div>
