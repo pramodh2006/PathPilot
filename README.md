@@ -2,9 +2,8 @@
 
 **AI-Powered Career Roadmap Generator**
 
-PathPilot helps students and professionals achieve their career goals by generating personalized, day-by-day execution plans. Using Google Gemini 2.0 Flash, it creates adaptive schedules that track progress, streaks, and milestones.
+PathPilot helps students and professionals achieve their career goals by generating personalized, day-by-day execution plans. Using Groq AI, it creates adaptive schedules that track progress, streaks, and milestones.
 
-![PathPilot Dashboard](https://github.com/pramodh2006/PathPilot/assets/placeholder-image.png)
 
 ## ✨ Features
 
@@ -18,7 +17,7 @@ PathPilot helps students and professionals achieve their career goals by generat
 ## 🛠️ Tech Stack
 
 - **Frontend**: React + TypeScript + Vite + Tailwind CSS
-- **Backend**: Flask (Python) + Google Gemini AI
+- **Backend**: Flask (Python) + Groq AI
 - **Deployment**: Ready for Vercel (Frontend) & Railway/Render (Backend)
 
 ---
@@ -42,3 +41,4 @@ python app.py
 cd frontend
 npm install
 npm run dev
+
