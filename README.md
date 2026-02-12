@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/97c0fdc9-8644-43bd-bb00-3559947dfff2" alt="PathPilot Banner" width="100%" />
+<img src="https://github.com/user-attachments/assets/2abf7844-2c2a-4487-bee0-aab42bdfb369" alt="Dashboard" width="100%" />
 
   # PathPilot 🚀
   ### AI-Powered Career Execution System
@@ -94,3 +94,4 @@ npm install
 
 # Start development server
 npm run dev
+
