@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Target, Calendar, Clock, TrendingUp, CheckCircle2, 
-  Flame, Activity, Lock, Plus, Pencil, X, Save, RefreshCw
+  Flame, Activity, Lock, Plus, Pencil, X, Save, RefreshCw, LogOut
 } from 'lucide-react';
 import type { MissionData } from '../App';
 
 interface MissionControlProps {
   missionData: MissionData;
   roadmap: any;
+  onLogout?: () => void; // Added logout prop to prevent TypeScript errors
 }
 
 interface Task {
@@ -78,7 +79,7 @@ const parseTimelineToDays = (timeline: string): number => {
   return 30;
 };
 
-export default function MissionControl({ missionData, roadmap }: MissionControlProps) {
+export default function MissionControl({ missionData, roadmap, onLogout }: MissionControlProps) {
   const [selectedDay, setSelectedDay] = useState(1);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -231,10 +232,17 @@ export default function MissionControl({ missionData, roadmap }: MissionControlP
   const generateNextPhase = async () => {
     if (!roadmap?.roadmap_id) return;
     setIsExtending(true);
+    
+    // GET THE JWT TOKEN FOR THE EXTEND ROUTE
+    const token = localStorage.getItem('token');
+    
     try {
       const response = await fetch('http://127.0.0.1:5000/plan/extend', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // <--- ADDED JWT HERE
+        },
         body: JSON.stringify({
           roadmap_id: roadmap.roadmap_id,
           goal: missionData.goal,
@@ -243,6 +251,15 @@ export default function MissionControl({ missionData, roadmap }: MissionControlP
           target_days: targetDays
         })
       });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          window.location.reload();
+        }
+        throw new Error("Failed to extend roadmap");
+      }
+      
       const data = await response.json();
       if (data.status === 'success' && data.new_tasks) {
         setTasks(prev => [...prev, ...data.new_tasks]);
@@ -272,11 +289,24 @@ export default function MissionControl({ missionData, roadmap }: MissionControlP
       <div className="flex w-full">
         {/* Sidebar */}
         <div className="w-80 border-r border-zinc-800 bg-zinc-900/30 flex flex-col p-6">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center">
-              <Target className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center">
+                <Target className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">PathPilot</span>
             </div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">PathPilot</span>
+            
+            {/* Added Logout Button directly in Dashboard */}
+            {onLogout && (
+              <button 
+                onClick={onLogout}
+                className="text-zinc-500 hover:text-zinc-300 transition-colors p-2"
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-8">

@@ -39,23 +39,40 @@ export default function GenerationExperience({ missionData, onComplete }: Genera
         // Step 0: Start "Analyzing"
         setCurrentStep(0);
         
-        // Start the API call immediately
+        // GET THE JWT TOKEN FROM LOCAL STORAGE
+        const token = localStorage.getItem('token');
+        
+        // Start the API call immediately WITH AUTH HEADER
         const apiPromise = fetch('http://127.0.0.1:5000/plan', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` // <--- ADDED JWT HERE
+          },
           body: JSON.stringify({
             goal: missionData.goal,
             hours_per_day: missionData.hoursPerDay,
+            targetTimeline: missionData.targetTimeline // Added this so backend knows how long to make it
           })
         });
 
-        // Step 1: Force a minimum wait for the first animation (so it doesn't flash too fast)
+        // Step 1: Force a minimum wait for the first animation
         await new Promise(resolve => setTimeout(resolve, 1500));
         if (isMounted) setCurrentStep(1); // Mapping skill dependencies...
 
         // Step 2: Wait for the API to actually finish
         const response = await apiPromise;
-        if (!response.ok) throw new Error("Backend Connection Failed");
+        
+        // Check for Auth Failure (Token expired or missing)
+        if (!response.ok) {
+           if (response.status === 401) {
+              localStorage.removeItem('token');
+              localStorage.removeItem('username');
+              alert("Session expired. Please log in again.");
+              window.location.reload();
+           }
+           throw new Error("Backend Connection Failed");
+        }
         
         const data = await response.json();
         
@@ -73,7 +90,7 @@ export default function GenerationExperience({ missionData, onComplete }: Genera
 
       } catch (error) {
         console.error("API Error:", error);
-        alert("Error: Is your Flask Backend running on port 5000?");
+        alert("Error: Connection to AI core failed.");
       }
     }
 
@@ -84,7 +101,7 @@ export default function GenerationExperience({ missionData, onComplete }: Genera
 
   return (
     <div className="relative w-full h-full bg-[#0A0A0A] overflow-hidden flex items-center justify-center">
-      {/* Animated Node Network (Unchanged) */}
+      {/* Animated Node Network */}
       <svg className="absolute inset-0 w-full h-full opacity-20">
         <defs>
           <radialGradient id="nodeGradient">
