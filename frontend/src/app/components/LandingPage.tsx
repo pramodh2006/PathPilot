@@ -1,15 +1,44 @@
 import { motion } from 'motion/react';
-import { ArrowRight, Target, TrendingUp, Zap } from 'lucide-react';
+import { ArrowRight, Target, TrendingUp, Zap, LogOut } from 'lucide-react';
 
 interface LandingPageProps {
   onStart: () => void;
+  onLogout?: () => void; // Support for the optional logout button you passed from App.tsx
+  username?: string;
 }
 
-export default function LandingPage({ onStart }: LandingPageProps) {
+export default function LandingPage({ onStart, onLogout, username }: LandingPageProps) {
   return (
-    <div className="relative w-full h-full bg-[#0A0A0A] overflow-hidden">
-      {/* Animated Grid Background */}
-      <div className="absolute inset-0">
+    // Changed h-full to min-h-screen to ensure it always fills the browser window vertically
+    <div className="relative w-full min-h-screen bg-[#0A0A0A] overflow-hidden flex flex-col">
+      
+      {/* Navigation / Header */}
+      <nav className="relative z-20 flex items-center justify-between p-6 lg:px-12 w-full">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center">
+            <Target className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-xl font-bold text-white">PathPilot</span>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-400">
+            {username && <span className="text-indigo-400">Hi, {username}</span>}
+          </div>
+          {onLogout && (
+             <button 
+               onClick={onLogout}
+               className="flex items-center gap-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors px-4 py-2 border border-zinc-800 rounded-lg hover:bg-zinc-900"
+             >
+               <LogOut className="w-4 h-4" />
+               <span className="hidden sm:inline">Logout</span>
+             </button>
+          )}
+        </div>
+      </nav>
+
+      {/* Animated Grid Background - Changed to fixed so it doesn't cut off if scrolling */}
+      <div className="fixed inset-0 pointer-events-none">
         <svg className="w-full h-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -45,16 +74,16 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center h-full px-6">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
           className="text-center max-w-4xl"
         >
-          {/* Logo */}
+          {/* Logo (Centered for impact) */}
           <motion.div 
-            className="mb-8 flex items-center justify-center gap-3"
+            className="mb-8 flex items-center justify-center gap-3 lg:hidden" // Hidden on large screens since it's in nav
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
@@ -96,7 +125,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
             onClick={onStart}
-            className="group relative px-8 py-4 bg-white text-black rounded-xl font-medium text-lg hover:scale-[1.02] transition-transform duration-200 flex items-center gap-3 mx-auto overflow-hidden"
+            className="group relative px-8 py-4 bg-white text-black rounded-xl font-medium text-lg hover:scale-[1.02] transition-transform duration-200 flex items-center gap-3 mx-auto overflow-hidden shadow-[0_0_40px_rgba(79,70,229,0.3)] hover:shadow-[0_0_60px_rgba(79,70,229,0.5)]"
           >
             <span className="relative z-10">Initialize Mission</span>
             <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
@@ -128,7 +157,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </div>
 
       {/* Ambient Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none -z-10" />
     </div>
   );
 }

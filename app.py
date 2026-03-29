@@ -3,10 +3,15 @@ from flask_cors import CORS
 import json
 import os
 import re
-import sqlite3 # ADDED SQLITE
-from planner.rules import apply_rules
-from planner.scheduler import generate_schedule
-from planner.progress import record_progress
+import sqlite3
+import jwt
+import datetime
+from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
+# Make sure these imports exist in your project, or comment them out if unused
+# from planner.rules import apply_rules
+# from planner.scheduler import generate_schedule
+# from planner.progress import record_progress
 from groq import Groq  
 from dotenv import load_dotenv  
 
@@ -14,7 +19,10 @@ app = Flask(__name__)
 CORS(app)
 load_dotenv() 
 
+# Setup Secrets and Keys
+app.config['SECRET_KEY'] = os.environ.get("FLASK_SECRET_KEY", "super-secret-pathpilot-key")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+
 if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY is not set.")
 
@@ -25,17 +33,31 @@ DB_PATH = 'pathpilot.db'
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    # Table for overall Roadmaps
+    
+    # 1. Users Table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+    ''')
+    
+    # 2. Roadmaps Table (Linked to user_id)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS roadmaps (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
             goal TEXT NOT NULL,
             hours_per_day INTEGER,
             total_days INTEGER,
-            current_day INTEGER DEFAULT 1
+            current_day INTEGER DEFAULT 1,
+            FOREIGN KEY(user_id) REFERENCES users(id)
         )
     ''')
-    # Table for individual Tasks linked to a Roadmap
+    
+    # 3. Tasks Table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,6 +80,135 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+# --- AUTHENTICATION MIDDLEWARE ---
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        # Check headers for Authorization: Bearer <token>
+        if 'Authorization' in request.headers:
+            parts = request.headers['Authorization'].split()
+            if len(parts) == 2:
+                token = parts[1]
+
+        if not token:
+            return jsonify({'message': 'Token is missing!'}), 401
+
+        try:
+            # Decode the JWT token to find who is making the request
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            conn = get_db_connection()
+            current_user = conn.execute('SELECT * FROM users WHERE id = ?', (data['user_id'],)).fetchone()
+            conn.close()
+            if not current_user:
+                raise Exception("User not found")
+        except Exception as e:
+            return jsonify({'message': 'Token is invalid or expired!'}), 401
+
+        # Pass the current user object to the protected route
+        return f(current_user, *args, **kwargs)
+    return decorated
+
+# --- AUTHENTICATION ROUTES ---
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    if not data or not data.get('username') or not data.get('email') or not data.get('password'):
+        return jsonify({'message': 'Missing fields!'}), 400
+
+    hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
+    
+    try:
+        conn = get_db_connection()
+        conn.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', 
+                     (data['username'], data['email'], hashed_password))
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'User created successfully!'}), 201
+    except sqlite3.IntegrityError:
+        return jsonify({'message': 'Username or Email already exists!'}), 409
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({'message': 'Missing fields!'}), 400
+
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE email = ?', (data['email'],)).fetchone()
+    conn.close()
+
+    if not user:
+        return jsonify({'message': 'User not found!'}), 401
+
+    if check_password_hash(user['password'], data['password']):
+        # Create a token that lasts for 24 hours
+        token = jwt.encode({
+            'user_id': user['id'], 
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+        }, app.config['SECRET_KEY'], algorithm="HS256")
+        
+        return jsonify({
+            'token': token,
+            'username': user['username']
+        })
+
+    return jsonify({'message': 'Incorrect password!'}), 401
+
+# --- USER DATA ROUTE ---
+@app.route("/user/roadmap", methods=["GET"])
+@token_required
+def get_user_roadmap(current_user):
+    conn = get_db_connection()
+    # Get the user's most recent roadmap
+    roadmap = conn.execute(
+        'SELECT * FROM roadmaps WHERE user_id = ? ORDER BY id DESC LIMIT 1', 
+        (current_user['id'],)
+    ).fetchone()
+
+    if not roadmap:
+        conn.close()
+        return jsonify({"has_roadmap": False})
+
+    # Get all tasks for this roadmap
+    tasks = conn.execute(
+        'SELECT * FROM tasks WHERE roadmap_id = ? ORDER BY day_number ASC', 
+        (roadmap['id'],)
+    ).fetchall()
+    
+    conn.close()
+
+    # Format the data to match what the frontend expects
+    saved_tasks = []
+    for t in tasks:
+        saved_tasks.append({
+            "id": t['id'],
+            "day": t['day_number'],
+            "title": t['title'],
+            "completed": bool(t['completed']),
+            "duration": t['duration']
+        })
+
+    return jsonify({
+        "has_roadmap": True,
+        "missionData": {
+            "goal": roadmap['goal'],
+            "hoursPerDay": roadmap['hours_per_day'],
+            "targetTimeline": f"{roadmap['total_days']} days",
+            "currentLevel": "Intermediate" # Default/fallback 
+        },
+        "roadmap": {
+            "roadmap_id": roadmap['id'],
+            "total_days": roadmap['total_days'],
+            "plan": {
+                "milestones": [f"Phase 1: {roadmap['goal']} Fundamentals"], # Placeholder milestone
+                "tasks": saved_tasks
+            }
+        }
+    })
+
+# --- API ROUTES ---
 @app.route('/')
 def dashboard():
     return render_template('dashboard.html')
@@ -66,8 +217,10 @@ def dashboard():
 def health_check():
     return jsonify({"status": "PathPilot API running 🚀"})
 
+
 @app.route("/plan", methods=["POST"])
-def create_plan():
+@token_required # SECURED: Only logged-in users can generate plans
+def create_plan(current_user):
     data = request.get_json(force=True)
     goal = data.get("goal", "dsa").lower()
     hours = data.get("hours_per_day", 2)
@@ -81,8 +234,7 @@ def create_plan():
     elif 'week' in timeline_str: days_count = 7 * num
     elif 'month' in timeline_str: days_count = 30 * num
 
-    # Cap initial generation at 30 days to avoid Groq token limits. 
-    # (We will add a route to generate the REST later)
+    # Cap initial generation at 30 days
     initial_generation_target = min(days_count, 30)
 
     try:
@@ -111,23 +263,21 @@ def create_plan():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # 1. Create the roadmap entry
+        # Link this roadmap specifically to the user who requested it!
         cursor.execute(
-            "INSERT INTO roadmaps (goal, hours_per_day, total_days) VALUES (?, ?, ?)",
-            (goal, hours, days_count) # Notice we save total requested days_count here!
+            "INSERT INTO roadmaps (user_id, goal, hours_per_day, total_days) VALUES (?, ?, ?, ?)",
+            (current_user['id'], goal, hours, days_count) 
         )
         roadmap_id = cursor.lastrowid
 
-        # 2. Parse and save tasks
         saved_tasks = []
         for idx, task_str in enumerate(plan_data.get('tasks', [])):
             day_num = idx + 1
-            # Clean "Day X: " from string for clean DB storage
             clean_title = re.sub(r'^Day\s*\d+:\s*', '', task_str).strip()
             
             cursor.execute(
                 "INSERT INTO tasks (roadmap_id, day_number, title, duration) VALUES (?, ?, ?, ?)",
-                (roadmap_id, day_num, clean_title, 1.0) # Defaulting to 1hr for now
+                (roadmap_id, day_num, clean_title, 1.0) 
             )
             
             saved_tasks.append({
@@ -141,7 +291,6 @@ def create_plan():
         conn.commit()
         conn.close()
 
-        # Return the new structured format including the DB Roadmap ID
         return jsonify({
             "roadmap_id": roadmap_id,
             "goal": goal,
@@ -149,13 +298,14 @@ def create_plan():
             "tasks_generated": len(saved_tasks),
             "plan": {
                 "milestones": plan_data.get('milestones', []),
-                "tasks": saved_tasks # We now return the clean DB tasks!
+                "tasks": saved_tasks 
             }
         })
 
     except Exception as e:
         print("AI ERROR:", e)
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

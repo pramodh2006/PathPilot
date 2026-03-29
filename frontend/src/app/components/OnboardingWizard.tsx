@@ -41,6 +41,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
     } else {
       onComplete({
         ...formData,
+        currentLevel: formData.currentLevel,
         hoursPerDay: parseFloat(formData.hoursPerDay)
       });
     }
@@ -97,7 +98,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
             </div>
             <input
               type="text"
-              value={formData.currentLevel !== 'Beginner' && formData.currentLevel !== 'Intermediate' && formData.currentLevel !== 'Advanced' && formData.currentLevel !== 'Expert' ? formData.currentLevel : ''}
+              value={!['Beginner', 'Intermediate', 'Advanced', 'Expert'].includes(formData.currentLevel) ? formData.currentLevel : ''}
               onChange={(e) => updateField('currentLevel', e.target.value)}
               placeholder="Or describe your current position..."
               className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-6 py-4 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
@@ -190,9 +191,9 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
   };
 
   return (
-    <div className="relative w-full h-full bg-[#0A0A0A] overflow-hidden">
+    <div className="relative w-full min-h-screen bg-[#0A0A0A] overflow-x-hidden flex flex-col">
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-[0.02]">
+      <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="onboarding-grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -204,9 +205,9 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col h-full">
+      <div className="relative z-10 flex flex-col flex-1">
         {/* Header */}
-        <div className="px-6 md:px-12 pt-8 pb-6 border-b border-zinc-900">
+        <div className="px-6 md:px-12 pt-8 pb-6 border-b border-zinc-900 bg-[#0A0A0A]/80 backdrop-blur-sm sticky top-0 z-20">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
@@ -233,8 +234,8 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto px-6 md:px-12 py-12">
-          <div className="max-w-3xl mx-auto">
+        <div className="flex-1 px-6 md:px-12 py-12 flex flex-col justify-center">
+          <div className="max-w-3xl mx-auto w-full">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
@@ -257,7 +258,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
         </div>
 
         {/* Footer Navigation */}
-        <div className="px-6 md:px-12 py-6 border-t border-zinc-900">
+        <div className="px-6 md:px-12 py-6 border-t border-zinc-900 mt-auto bg-[#0A0A0A]/80 backdrop-blur-sm sticky bottom-0 z-20">
           <div className="max-w-3xl mx-auto flex items-center justify-between">
             <button
               onClick={handleBack}
