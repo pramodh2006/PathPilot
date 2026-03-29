@@ -6,6 +6,9 @@ interface AuthProps {
   onLoginSuccess: (token: string, username: string) => void;
 }
 
+// Use environment variable for the backend API, fallback to local for dev
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+
 export default function Auth({ onLoginSuccess }: AuthProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
@@ -17,7 +20,8 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     setError('');
     setIsLoading(true);
 
-    const endpoint = isLogin ? 'http://127.0.0.1:5000/login' : 'http://127.0.0.1:5000/register';
+    // Dynamically use the API_URL here
+    const endpoint = isLogin ? `${API_URL}/login` : `${API_URL}/register`;
     
     try {
       const response = await fetch(endpoint, {

@@ -29,6 +29,9 @@ interface Milestone {
 
 const storageKey = (goal: string) => `pathpilot:${goal.replace(/\s+/g, '_')}:v3`;
 
+// Use environment variable for the backend API
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+
 const loadState = (goal: string) => {
   try { 
     return JSON.parse(localStorage.getItem(storageKey(goal)) || '{"completed":{}, "customTasks":[]}'); 
@@ -79,9 +82,6 @@ const parseTimelineToDays = (timeline: string): number => {
 };
 
 export default function MissionControl({ missionData, roadmap, onLogout }: MissionControlProps) {
-  // ==========================================
-  // RESIZER & MOBILE STATE
-  // ==========================================
   const [sidebarWidth, setSidebarWidth] = useState(380);
   const [isDragging, setIsDragging] = useState(false);
   const [isDesktop, setIsDesktop] = useState(
@@ -130,10 +130,6 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
     };
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
-
-  // ==========================================
-  // DASHBOARD STATE
-  // ==========================================
   const [selectedDay, setSelectedDay] = useState(1);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -194,7 +190,6 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
     setHeatmapCells(getHeatmapData(saved.completed));
     const activeDays = new Set(allTasks.filter(t => t.completed).map(t => t.day)).size;
     setStreak(activeDays);
-
   }, [roadmap, missionData.goal]);
 
   const updateStats = (currentTasks: Task[], completedMap: any) => {
@@ -280,7 +275,7 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
     setIsExtending(true);
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch('http://127.0.0.1:5000/plan/extend', {
+      const response = await fetch(`${API_URL}/plan/extend`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -314,7 +309,6 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
 
   const todayTasks = tasks.filter(t => t.day === selectedDay);
 
-  // Reusable Sidebar Content Component
   const SidebarContent = () => (
     <>
       <div className="flex items-center justify-between mb-8">
@@ -363,7 +357,6 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
 
       <h3 className="text-sm font-medium text-zinc-300 mb-4">Mission Roadmap</h3>
 
-      {/* Removed inner scroll lock so the whole mobile panel scrolls naturally */}
       <div className="pr-2 pb-8">
         <div className="relative space-y-0 ml-2">
           <div className="absolute left-[15px] top-2 bottom-4 w-0.5 bg-zinc-800"></div>
@@ -381,7 +374,6 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
         </div>
       </div>
 
-      {/* Logout button at bottom of mobile sidebar */}
       {!isDesktop && onLogout && (
         <button onClick={onLogout} className="mt-auto mb-4 w-full py-3 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl flex items-center justify-center gap-2 transition-colors">
           <LogOut className="w-5 h-5" /> Logout
@@ -393,7 +385,6 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
   return (
     <div className="min-h-screen bg-black text-zinc-100 flex flex-col md:flex-row md:h-screen md:overflow-hidden font-sans relative">
       
-      {/* Celebration Modal */}
       <AnimatePresence>
         {showCelebration && (
           <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 pointer-events-none flex items-center justify-center z-50">
@@ -405,7 +396,6 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
         )}
       </AnimatePresence>
 
-      {/* ================= DESKTOP LEFT SIDEBAR ================= */}
       {isDesktop && (
         <div 
           className="flex flex-col border-r border-zinc-800 bg-zinc-900/30 p-6 h-full overflow-y-auto"
@@ -415,7 +405,6 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
         </div>
       )}
 
-      {/* ================= MOBILE SIDEBAR OVERLAY ================= */}
       <AnimatePresence>
         {!isDesktop && isMobileSidebarOpen && (
           <motion.div 
@@ -430,7 +419,6 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
         )}
       </AnimatePresence>
 
-      {/* ================= DRAG HANDLE DIVIDER ================= */}
       {isDesktop && (
         <div 
           onMouseDown={handleMouseDown}
@@ -440,10 +428,8 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
         />
       )}
 
-      {/* ================= RIGHT MAIN CONTENT ================= */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#050505]">
         
-        {/* MOBILE HEADER (Only visible on small screens) */}
         {!isDesktop && (
           <div className="bg-zinc-900/50 border-b border-zinc-800 p-4 flex items-center justify-between sticky top-0 z-40 backdrop-blur-md">
             <div className="flex items-center gap-2">
@@ -481,7 +467,6 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
               </div>
             </div>
 
-            {/* Day Selector - Added CSS inline style to hide default scrollbars completely */}
             <div 
               className="flex gap-3 mb-8 overflow-x-auto pb-2" 
               style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}
@@ -510,7 +495,6 @@ export default function MissionControl({ missionData, roadmap, onLogout }: Missi
               })}
             </div>
 
-            {/* Task List */}
             <div className="space-y-3 mb-8">
               {todayTasks.length === 0 ? (
                 <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-8 text-center">
