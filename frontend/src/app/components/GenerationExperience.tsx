@@ -42,12 +42,15 @@ export default function GenerationExperience({ missionData, onComplete }: Genera
         // GET THE JWT TOKEN FROM LOCAL STORAGE
         const token = localStorage.getItem('token');
         
-        // Start the API call immediately WITH AUTH HEADER
-        const apiPromise = fetch('http://127.0.0.1:5000/plan', {
+        // 1. Define the base URL (Uses Vercel in production, localhost in development)
+        const API_URL = (import.meta as any).env.VITE_API_URL || 'http://127.0.0.1:5000';
+
+        // 2. Start the API call immediately WITH AUTH HEADER
+        const apiPromise = fetch(`${API_URL}/plan`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` // <--- ADDED JWT HERE
+            'Authorization': `Bearer ${token}` 
           },
           body: JSON.stringify({
             goal: missionData.goal,

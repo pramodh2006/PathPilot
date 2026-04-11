@@ -13,7 +13,7 @@ export type MissionData = {
 };
 
 // Use environment variable for the backend API, fallback to local for dev
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+const API_URL = (import.meta as any).env.VITE_API_URL || 'http://127.0.0.1:5000';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

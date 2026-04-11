@@ -30,8 +30,7 @@ interface Milestone {
 const storageKey = (goal: string) => `pathpilot:${goal.replace(/\s+/g, '_')}:v3`;
 
 // Use environment variable for the backend API
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
-
+const API_URL = (import.meta as any).env.VITE_API_URL || 'http://127.0.0.1:5000';
 const loadState = (goal: string) => {
   try { 
     return JSON.parse(localStorage.getItem(storageKey(goal)) || '{"completed":{}, "customTasks":[]}'); 
